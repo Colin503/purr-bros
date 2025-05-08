@@ -7,6 +7,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 
     this->mainView = new QGraphicsView;
     this->mainView->setScene(mainScene);
+    mainView->setSceneRect(mainScene->sceneRect());
+//mainView->fitInView(mainScene->sceneRect(), Qt::KeepAspectRatio);
 
     this->setCentralWidget(mainView);
     this->setWindowTitle("My main window");
@@ -20,6 +22,11 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     QAction* restartAction = new QAction(tr("&Rejouer"), this);
     connect(restartAction, SIGNAL(triggered()), mainScene, SLOT(resetGame()));
     helpMenu->addAction(restartAction);
+
+    //optimisation du redimensionnement
+    mainView->setRenderHint(QPainter::SmoothPixmapTransform);
+    mainView->setViewportUpdateMode(QGraphicsView::FullViewportUpdate);
+    mainView->setSceneRect(mainScene->sceneRect());
 
 }
 

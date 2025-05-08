@@ -1,174 +1,262 @@
 #include "MyScene.h"
 
-MyScene::MyScene(QObject* parent) : QGraphicsScene(parent) {
-    this->qgri = new QGraphicsRectItem(0, 0, 300, 200);
-    qgri->setPos(0, 100);
-    this->addItem(qgri);
 
-    this->qgri1 = new QGraphicsRectItem(0, 0, 200, 100);
-    qgri1->setPos(400, -100);
-    this->addItem(qgri1);
+MyScene::MyScene(QObject* parent) : QGraphicsScene(parent),
+                                    velocityY(0), gravity(0.5f), jumpForce(-20.0f), onGround(false), isGameRunning(true) {
 
-    this->qgri2 = new QGraphicsRectItem(0, 0, 1000, 200);
-    qgri2->setPos(800, 100);
-    this->addItem(qgri2);
+    // Initialisation des composants
+    loadTextures();
+    createGameItems();
+    initTimers();
+    loadBestTime();
+}
 
-    goalItem = new QGraphicsPixmapItem(QPixmap("../img/file_99668.png"));
-    goalItem->setPos(1500, -150); 
-    this->addItem(goalItem);
-
-    this->qgti = new QGraphicsTextItem("PURR BROS");
-    this->addItem(qgti);
-
-    playerPixmap = QPixmap("../img/file_99668.png");
-    if (playerPixmap.isNull()) {
-        qDebug() << "Erreur : impossible de charger l'image du joueur !";
+void MyScene::loadTextures() {
+    // Joueur
+    if (!textures.player.load("../assets/player/player.png")) {
+        qDebug() << "Failed to load player texture";
+        textures.player = QPixmap(50, 50);
+        textures.player.fill(Qt::blue);
     }
 
-    playerPixmapJump = QPixmap("../img/file_99666.png");
-    if (playerPixmapJump.isNull()) {
-        qDebug() << "Erreur : impossible de charger l'image du joueur !";
+    if (!textures.playerJump.load("../assets/player/player_jump.png")) {
+        textures.playerJump = textures.player;
     }
-    this->qgpi = new QGraphicsPixmapItem(playerPixmap);
-    qgpi->setPos(0, -100);
-    this->addItem(qgpi);
 
-    this->tab_rect.push_back(qgri);
-    this->tab_rect.push_back(qgri1);
-    this->tab_rect.push_back(qgri2);
+    textures.background.load("../assets/environment/background.png");
 
+    // Plateformes
+    if (!textures.platformC.load("../assets/environment/platformBig.png")) {
+        qDebug() << "ERREUR: Impossible de charger platform_center.png";
+        qDebug() << "Chemin essayé:" << QFileInfo("../assets/environment/platformBig.png").absoluteFilePath();
+        qDebug() << "Le fichier existe?" << QFile::exists("../assets/environment/platformBig.png");
+
+        // Crée une plateforme de repli (visible en rouge)
+        textures.platformC = QPixmap(300, 30);
+        textures.platformC.fill(Qt::red);
+    }
+
+    // Goal
+    textures.goal.load("../assets/environment/goal.png");
+    textures.coin.load("../assets/environment/coin.png");
+
+    setSceneRect(0, 0, textures.background.width(), textures.background.height());
+}
+
+void MyScene::createGameItems() {
+    // Background
+    QGraphicsPixmapItem* bgItem = new QGraphicsPixmapItem(textures.background);
+    bgItem->setZValue(-1000);
+    addItem(bgItem);
+
+    // Joueur
+    playerItem = new QGraphicsPixmapItem(textures.player);
+    playerItem->setPos(100, -1000);
+    playerItem->setZValue(100);
+    addItem(playerItem);
+
+    // Plateformes
+    platforms.clear();
+    // Plateforme de départ (large)
+    platforms.append(createPlatform(0, 1200, 681, 256));
+
+// Plateformes intermédiaires (en escalier)
+    platforms.append(createPlatform(900, 1100, 681, 256));
+    platforms.append(createPlatform(1300, 900, 681, 256));
+    platforms.append(createPlatform(1700, 700, 681, 256));
+
+// Grand plateau central
+    platforms.append(createPlatform(2200, 800, 681, 256));
+
+// Plateforme finale (avant le goal)
+    platforms.append(createPlatform(3500, 600, 681, 256));
+
+    // Goal
+    goalItem = new QGraphicsPixmapItem(textures.goal);
+    goalItem->setPos(1500, -150);
+    goalItem->setZValue(50);
+    addItem(goalItem);
+
+    //Coins
+    coins.clear();
+    coins.append(createCoin(200,1000));
+
+    // UI
+    timeText = new QGraphicsTextItem("Temps: 00:00:00");
+    timeText->setDefaultTextColor(Qt::white);
+    timeText->setPos(10, 10);
+    addItem(timeText);
+
+    bestTimeText = new QGraphicsTextItem("Meilleur temps: --:--:--");
+    bestTimeText->setDefaultTextColor(Qt::white);
+    bestTimeText->setPos(10, 40);
+    addItem(bestTimeText);
+}
+
+void MyScene::initTimers() {
+    // Timer de jeu
     timer = new QTimer(this);
-    connect(timer, SIGNAL(timeout()), this, SLOT(update()));
-    timer->start(30); // Toutes les 30 millisecondes (~33 FPS)
+    connect(timer, &QTimer::timeout, this, &MyScene::update);
+    timer->start(30);
 
+    // Timer du chrono
+    QTimer* timeTimer = new QTimer(this);
+    connect(timeTimer, &QTimer::timeout, this, &MyScene::updateTime);
+    timeTimer->start(1000);
+}
 
-    //Le saut a été fait grace à VoidRealms sur Youtube
-    // Initialisation des variables de physique
-    velocityY = 0;
-    gravity = 0.5;    // Ajuste selon tes besoins
-    jumpForce = -12;  // Négatif car l’axe Y va vers le haut
-    onGround = false;
+void MyScene::loadBestTime() {
+    QSettings settings;
+    bestTime = settings.value("bestTime").toTime();
 
-    // Initialisation du chronomètre
-    timeTextItem = new QGraphicsTextItem("Temps: 00:00:00");
-    timeTextItem->setPos(10, 10);
-    this->addItem(timeTextItem);
-
-    bestTimeTextItem = new QGraphicsTextItem("Meilleur temps: --:--:--");
-    bestTimeTextItem->setPos(10, 40);
-    this->addItem(bestTimeTextItem);
+    if (!bestTime.isNull()) {
+        bestTimeText->setPlainText("Meilleur temps: " + bestTime.toString("hh:mm:ss"));
+    }
 
     gameTime = QTime(0, 0, 0);
-    isGameRunning = true;
-
-    // Charge le meilleur temps depuis QSettings
-    QSettings settings;
-    bestTime = settings.value("bestTime", QTime(0, 0, 0)).toTime();
-    if (bestTime != QTime(0, 0, 0)) {
-        bestTimeTextItem->setPlainText("Meilleur temps: " + bestTime.toString("hh:mm:ss"));
-    }
-
-    // Nouveau timer pour le chronomètre (déclenché toutes les secondes)
-    QTimer* timeTimer = new QTimer(this);
-    connect(timeTimer, SIGNAL(timeout()), this, SLOT(updateTime()));
-    timeTimer->start(1000);  // 1 seconde
-}
-
-MyScene::~MyScene() {
-}
-
-// Nouvelle méthode pour mettre à jour le chronomètre
-void MyScene::updateTime() {
-    if (isGameRunning) {
-        gameTime = gameTime.addSecs(1);
-        timeTextItem->setPlainText("Temps: " + gameTime.toString("hh:mm:ss"));
-    }
 }
 
 void MyScene::update() {
-    QPointF point = qgpi->pos();
+    if (!isGameRunning) return;
 
-    // Appliquer la gravité
+    // Physique du joueur
+    QPointF pos = playerItem->pos();
     velocityY += gravity;
-    qgpi->setPos(point.x(), point.y() + velocityY);
+    playerItem->setPos(pos.x(), pos.y() + velocityY);
 
-    // Vérifier les collisions avec les plateformes
-    onGround = false; // Réinitialiser à chaque frame
-    for (auto* platform : tab_rect) {
-        if (qgpi->collidesWithItem(platform)) {
-            QRectF playerRect = qgpi->boundingRect().translated(qgpi->pos());
+    // Collisions avec les plateformes
+    onGround = false;
+    for (QGraphicsPixmapItem* platform : platforms) {
+        if (playerItem->collidesWithItem(platform)) {
+            QRectF playerRect = playerItem->boundingRect().translated(playerItem->pos());
             QRectF platformRect = platform->boundingRect().translated(platform->pos());
 
-            // Si le joueur vient d’au-dessus (atterrissage)
-            if (playerRect.bottom() >= platformRect.top() && velocityY > 0) {
-                qgpi->setPos(point.x(), platformRect.top() - playerRect.height());
+            if (playerRect.bottom() > platformRect.top() && velocityY > 0) {
+                playerItem->setPos(pos.x(), platformRect.top()-55);
                 velocityY = 0;
                 onGround = true;
-                //qDebug() << "Atterrissage sur plateforme !";
+                playerItem->setPixmap(textures.player); // Retour à l'image normale
+
             }
         }
     }
 
-    // Si aucune collision, le joueur est en l’air
-    if (!onGround && velocityY != 0) {
-        //qDebug() << "En l’air !";
+    // Collision avec le goal
+    if (playerItem->collidesWithItem(goalItem)) {
+        handleWinCondition();
     }
-    // Exemple : si le joueur atteint un objectif (à adapter)
-    if (qgpi->collidesWithItem(goalItem)) {  // Supposons que goalItem est un objet de fin
-        if (bestTime.isNull() || gameTime < bestTime) {
-            bestTime = gameTime;
-            bestTimeTextItem->setPlainText("Meilleur temps: " + bestTime.toString("hh:mm:ss"));
+}
 
-            // Sauvegarde dans QSettings
-            QSettings settings;
-            settings.setValue("bestTime", bestTime);
-        }
-        isGameRunning = false;
-        timer->stop();
+
+void MyScene::updateTime() {
+    if (isGameRunning) {
+        gameTime = gameTime.addSecs(1);
+        timeText->setPlainText("Temps: " + gameTime.toString("hh:mm:ss"));
     }
 }
 
 void MyScene::keyPressEvent(QKeyEvent* event) {
-    QPointF point = qgpi->pos();
+    QPointF pos = playerItem->pos();
 
-    if (event->key() == Qt::Key_P) { // Pause
-        //qDebug() << "Touche P appuyée";
-        if (timer->isActive()) timer->stop();
-        else timer->start();
-    }
-    if ((event->key() == Qt::Key_Up || event->key() == Qt::Key_Z) && onGround) { // Saut
-        velocityY = jumpForce; // Appliquer la force de saut
-        onGround = false;
-        //qDebug() << "Saut !";
-    }
-    if (event->key() == Qt::Key_Right || event->key() == Qt::Key_D) { // Droite
-        qgpi->setPos(point.x() + 10, point.y());
-    }
-    if (event->key() == Qt::Key_Left || event->key() == Qt::Key_Q) { // Gauche
-        qgpi->setPos(point.x() - 10, point.y());
-    }
-    // TEST -- À SUPPRIMER APRÈS
-    if (event->key() == Qt::Key_Down || event->key() == Qt::Key_S) { // Bas
-        qgpi->setPos(point.x(), point.y() + 10);
-    }
-    if (event->key() == Qt::Key_P) {
-        isGameRunning = !isGameRunning;  // Inverse l'état du jeu
-        if (timer->isActive()) timer->stop();
-        else timer->start();
+    switch (event->key()) {
+        case Qt::Key_P:
+            togglePause();
+            break;
+
+        case Qt::Key_Up:
+        case Qt::Key_Z:
+            jump();
+            break;
+
+        case Qt::Key_Right:
+        case Qt::Key_D:
+            movePlayer(pos.x() + 10, pos.y());
+            break;
+
+        case Qt::Key_Left:
+        case Qt::Key_Q:
+            movePlayer(pos.x() - 10, pos.y());
+            break;
+
+        case Qt::Key_R:
+            resetGame();
+            break;
     }
 }
 
+void MyScene::togglePause() {
+    isGameRunning = !isGameRunning;
+    if (timer->isActive()) {
+        timer->stop();
+    } else {
+        timer->start();
+    }
+}
+
+void MyScene::jump() {
+    if (onGround) {
+        velocityY = jumpForce;
+        onGround = false;
+        playerItem->setPixmap(textures.playerJump); // Image de saut
+    }
+}
+
+void MyScene::movePlayer(qreal x, qreal y) {
+    playerItem->setPos(x, y);
+}
+
 void MyScene::resetGame() {
-    // Réinitialise la position du joueur
-    qgpi->setPos(0, -100);
-
-    // Réinitialise le chronomètre
-    gameTime = QTime(0, 0, 0);
-    timeTextItem->setPlainText("Temps: 00:00:00");
-
-    // Relance le jeu
-    isGameRunning = true;
-    timer->start(30);
+    // Réinitialisation du joueur
+    playerItem->setPos(0, -100);
+    playerItem->setPixmap(textures.player);
     velocityY = 0;
     onGround = false;
+
+    // Réinitialisation du temps
+    gameTime = QTime(0, 0, 0);
+    timeText->setPlainText("Temps: 00:00:00");
+
+    // Redémarrage du jeu
+    isGameRunning = true;
+    timer->start();
+}
+
+void MyScene::drawBackground(QPainter* painter, const QRectF& rect) {
+    Q_UNUSED(rect);
+    painter->drawPixmap(sceneRect(), textures.background, textures.background.rect());
+}
+
+MyScene::~MyScene() {
+    delete timer;
+}
+
+void MyScene::handleWinCondition() {
+    isGameRunning = false;
+    timer->stop();
+
+    if (bestTime.isNull() || gameTime < bestTime) {
+        bestTime = gameTime;
+        bestTimeText->setPlainText("Meilleur temps: " + bestTime.toString("hh:mm:ss"));
+
+        QSettings settings;
+        settings.setValue("bestTime", bestTime);
+    }
+}
+
+QGraphicsPixmapItem* MyScene::createPlatform(int x, int y, int width, int height) {
+    QGraphicsPixmapItem* platform = new QGraphicsPixmapItem(textures.platformC);
+    platform->setPixmap(textures.platformC.scaled(width, height));
+    platform->setPos(x, y);
+    addItem(platform);
+    return platform;
+}
+
+QGraphicsPixmapItem* MyScene::createCoin(int x, int y) {
+    QGraphicsPixmapItem* coin = new QGraphicsPixmapItem(textures.coin);
+    coin->setPixmap(textures.coin);
+    coin->setPos(x, y);
+    addItem(coin);
+    return coin;
+
+
 }

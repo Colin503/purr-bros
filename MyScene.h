@@ -2,54 +2,69 @@
 #define CPP_QT_TPMINICLAUDE_MYSCENE_H
 
 #include <QGraphicsScene>
-#include <QGraphicsRectItem>
-#include <QGraphicsTextItem>
 #include <QGraphicsPixmapItem>
 #include <QTimer>
 #include <QTime>
-#include <QDebug>
 #include <QSettings>
+#include <QPixmap>
+#include <QVector>
+#include <QDebug>
+#include <QPainter>
 #include <QKeyEvent>
-#include <cstdlib>
-#include <iostream>
-#include <cmath>
-#include <vector>
-#include <cctype>
-#include <cstring>
-#include <map>
-#include <utility>
-#include <algorithm>
-#include <numeric>
-using namespace std;
+#include <QFileInfo>
+#include <QGraphicsView>
+
+
 
 class MyScene : public QGraphicsScene {
-    Q_OBJECT
+Q_OBJECT
 
 private:
+    // Timer et physique
     QTimer* timer;
-    vector<QGraphicsRectItem*> tab_rect;
-    QGraphicsTextItem* qgti;
-    QGraphicsRectItem* qgri;
-    QGraphicsRectItem* qgri2;
-    QGraphicsRectItem* qgri1;
-    QGraphicsPixmapItem* qgpi;
-    QPixmap playerPixmap;  // Variable pour stocker l'image en mémoire
-    QPixmap playerPixmapJump;  // Variable pour stocker l'image en mémoire
-    QGraphicsTextItem* timeTextItem;
-    QGraphicsTextItem* bestTimeTextItem;
+    float velocityY;
+    float gravity;
+    float jumpForce;
+    bool onGround;
+    bool isGameRunning;
+
+    // Éléments de jeu
+    QGraphicsPixmapItem* playerItem;
+    QGraphicsPixmapItem* goalItem;
+    QVector<QGraphicsPixmapItem*> platforms;
+    QVector<QGraphicsPixmapItem*> coins;
+
+    // Textures
+    struct Textures {
+        QPixmap player;
+        QPixmap playerJump;
+        QPixmap platformC;
+        QPixmap background;
+        QPixmap goal;
+        QPixmap coin;
+    } textures;
+
+    // UI
+    QGraphicsTextItem* timeText;
+    QGraphicsTextItem* bestTimeText;
     QTime gameTime;
     QTime bestTime;
-    bool isGameRunning;
-    QGraphicsPixmapItem* goalItem;
 
-    int sensY;
-    float velocityY;   // Vitesse verticale
-    float gravity;     // Gravité
-    float jumpForce;   // Force du saut
-    bool onGround;     // État : au sol ou non
+    void handleWinCondition();
+    void togglePause();
+    void jump();
+    void movePlayer(qreal x, qreal y);
+
 public:
     MyScene(QObject* parent = nullptr);
-    virtual ~MyScene();
+    ~MyScene() override;
+
+    void loadTextures();
+    void createGameItems();
+    void initTimers();
+    void loadBestTime();
+    QGraphicsPixmapItem* createPlatform(int x, int y, int width, int height);
+    QGraphicsPixmapItem* createCoin(int x, int y);
 
 public slots:
     void resetGame();
@@ -57,9 +72,8 @@ public slots:
     void update();
 
 protected:
-    void keyPressEvent(QKeyEvent* event);
-
+    void keyPressEvent(QKeyEvent* event) override;
+    void drawBackground(QPainter* painter, const QRectF& rect) override;
 };
 
-
-#endif //CPP_QT_TPMINIPROJET_MYSCENE_H
+#endif
