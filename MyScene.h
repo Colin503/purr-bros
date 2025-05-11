@@ -1,3 +1,4 @@
+
 #ifndef CPP_QT_TPMINICLAUDE_MYSCENE_H
 #define CPP_QT_TPMINICLAUDE_MYSCENE_H
 
@@ -13,6 +14,8 @@
 #include <QKeyEvent>
 #include <QFileInfo>
 #include <QGraphicsView>
+#include <QFile>
+#include <QTextStream>
 
 
 
@@ -20,7 +23,6 @@ class MyScene : public QGraphicsScene {
 Q_OBJECT
 
 private:
-    // Timer et physique
     QTimer* timer;
     float velocityY;
     float gravity;
@@ -29,10 +31,7 @@ private:
     bool isGameRunning;
     int score_piece=0;
     int platformDirection = 1;
-    const int PLATFORM_SPEED = 3;
-    const int PLATFORM_MIN_Y = 50;
-    const int PLATFORM_MAX_Y = 800;
-    QGraphicsPixmapItem* movingPlatform = nullptr; // Pointeur dédié
+    QGraphicsPixmapItem* movingPlatform = nullptr;
 
 
 
@@ -53,6 +52,7 @@ private:
     void togglePause();
     void jump();
     void movePlayer(qreal x, qreal y);
+    void SaveStats();
 
 public:
     MyScene(QObject* parent = nullptr);
@@ -75,7 +75,6 @@ public:
     QGraphicsTextItem* bestTimeText;
     QTime gameTime;
     QTime bestTime;
-    QGraphicsRectItem* timeBg = nullptr; // Ajoute cette ligne
 
 public slots:
     void resetGame();

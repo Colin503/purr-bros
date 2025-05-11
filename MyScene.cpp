@@ -20,7 +20,7 @@ void MyScene::loadTextures() {
     textures.platformC.load("../assets/environment/platformBig.png");
     textures.floor.load("../assets/environment/floor1.png");
     textures.goal.load("../assets/environment/goal.png");
-    textures.coin.load("../assets/environment/coin.png");
+    textures.coin.load("../assets/environment/coin1.png");
     setSceneRect(0, 0, textures.background.width(), textures.background.height());
 }
 
@@ -40,9 +40,9 @@ void MyScene::createGameItems() {
     floors.clear();
     coins.clear();
 
-    floors.append(createFloor(0, 1200, 1500, 256));
-    floors.append(createFloor(1600, 1200, 1500, 256));
-    floors.append(createFloor(3500, 1200, 1500, 256));
+    floors.append(createFloor(0, 1200, 1500, 400));
+    floors.append(createFloor(1600, 1200, 1500,400));
+    floors.append(createFloor(3500, 1200, 1500, 400));
 
 
     platforms.append(createPlatform(700, 700, 681, 256));
@@ -142,13 +142,13 @@ void MyScene::update() {
     }
     if (movingPlatform) {
         QPointF platformPos = movingPlatform->pos();
-        platformPos.setY(platformPos.y() + (PLATFORM_SPEED * platformDirection));
-        if (platformPos.y() >= PLATFORM_MAX_Y) { //changement du sens
-            platformPos.setY(PLATFORM_MAX_Y);
+        platformPos.setY(platformPos.y() + (3 * platformDirection));
+        if (platformPos.y() >= 800) { //changement du sens
+            platformPos.setY(800);
             platformDirection = -1;
         }
-        else if (platformPos.y() <= PLATFORM_MIN_Y) {
-            platformPos.setY(PLATFORM_MIN_Y);
+        else if (platformPos.y() <= 50) {
+            platformPos.setY(50);
             platformDirection = 1;
         }
         movingPlatform->setPos(platformPos);
@@ -157,7 +157,7 @@ void MyScene::update() {
             QRectF platformRect = movingPlatform->boundingRect().translated(movingPlatform->pos());
             if (playerRect.bottom() > platformRect.top() && velocityY > 0) {
                 playerItem->setPos(playerItem->pos().x(), platformRect.top() - playerRect.height());
-                playerItem->moveBy(0, PLATFORM_SPEED * platformDirection);
+                playerItem->moveBy(0, 3 * platformDirection);
                 velocityY = 0;
                 onGround = true;
             }
@@ -173,7 +173,7 @@ void MyScene::update() {
 
     }
 
-    // Collision avec le goal
+    // Collision avec le coffre
     if (playerItem->collidesWithItem(goalItem)) {
         handleWinCondition();
         playerItem->setPixmap(textures.playerFinal);
@@ -232,7 +232,7 @@ void MyScene::jump() {
     if (onGround) {
         velocityY = jumpForce;
         onGround = false;
-        playerItem->setPixmap(textures.playerJump); // Image de saut
+        playerItem->setPixmap(textures.playerJump);
     }
 }
 
@@ -241,17 +241,17 @@ void MyScene::movePlayer(qreal x, qreal y) {
 }
 
 void MyScene::resetGame() {
-    // Réinitialisation du joueur
+    //  joueur
     playerItem->setPos(0, -100);
     playerItem->setPixmap(textures.player);
     velocityY = 0;
     onGround = false;
 
-    // Réinitialisation du temps
+    //  temps
     gameTime = QTime(0, 0, 0);
     timeText->setPlainText("Temps: 00:00:00");
 
-    // Redémarrage du jeu
+    //  jeu
     isGameRunning = true;
     timer->start();
 }
@@ -275,6 +275,7 @@ void MyScene::handleWinCondition() {
 
         QSettings settings;
         settings.setValue("bestTime", bestTime);
+        SaveStats();
     }
 }
 
@@ -299,6 +300,17 @@ QGraphicsPixmapItem* MyScene::createCoin(int x, int y) {
     coin->setPos(x, y);
     addItem(coin);
     return coin;
+}
 
+void MyScene::SaveStats() {
+    QFile file("stats.txt");
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        qDebug() << "Impossible d'ouvrir le fichier en écriture";
+        return;
+    }
+    QTextStream out(&file);
+    out << "Meilleur temps: " << bestTime.toString("hh:mm:ss") << "\n";
+    out << "Pièces: " << score_piece << "\n";
+    file.close();
 
 }

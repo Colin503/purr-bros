@@ -8,18 +8,17 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     this->mainView = new QGraphicsView;
     this->mainView->setScene(mainScene);
     mainView->setSceneRect(mainScene->sceneRect());
-//mainView->fitInView(mainScene->sceneRect(), Qt::KeepAspectRatio);
 
     this->setCentralWidget(mainView);
-    this->setWindowTitle("My main window");
-    this->resize(1600, 1080);
+    this->setWindowTitle("PURR BROS");
+    this->resize(1600, 950);
 
-    helpMenu = menuBar()->addMenu(tr("&Help"));
+    helpMenu = menuBar()->addMenu(tr("&Menu"));
     QAction* actionHelp = new QAction(tr("&About"), this);
     connect(actionHelp, SIGNAL(triggered()), this, SLOT(slot_aboutMenu()));
     helpMenu->addAction(actionHelp);
 
-    QAction* restartAction = new QAction(tr("&Rejouer"), this);
+    QAction* restartAction = new QAction(tr("&Restart"), this);
     connect(restartAction, SIGNAL(triggered()), mainScene, SLOT(resetGame()));
     helpMenu->addAction(restartAction);
 
@@ -59,12 +58,12 @@ void MainWindow::followPlayer() { //j'ai refais une fonction hors du update pour
     QPointF playerPos = mainScene->playerItem->pos();
     mainView->centerOn(playerPos);
 
-    // 2. Calcule la position relative du timer par rapport à la vue (pas au monde)
-    QPointF viewTopLeft = mainView->mapToScene(QPoint(0, 0)); // Coin haut-gauche de la vue
-    qreal timerX = viewTopLeft.x() + 20; // 20px du bord gauche
-    qreal timerY = viewTopLeft.y() + 20; // 20px du bord haut
+    //Calcule de la position du timer par rapport à la vue du perso
+    QPointF viewTopLeft = mainView->mapToScene(QPoint(0, 0));
+    qreal timerX = viewTopLeft.x() + 20;
+    qreal timerY = viewTopLeft.y() + 20;
 
-    // 3. Positionne les éléments UI en coordonnées absolues de la vue
+    //Positionnement des éléments
     mainScene->timeText->setPos(timerX, timerY);
     mainScene->bestTimeText->setPos(timerX, timerY + 30); // 30px sous le premier texte
 
