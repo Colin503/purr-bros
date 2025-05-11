@@ -1,46 +1,60 @@
-# PURR BROS - Jeu de plateforme 2D
+# PURR BROS - 2D Platform Game
 
 ![PURR BROS](assets/environment/background.png)
 
 ## Description
-PURR BROS est un jeu de plateforme 2D développé en C++ avec Qt. Le joueur contrôle un personnage qui doit naviguer à travers différentes plateformes pour atteindre un objectif final, tout en collectant des pièces. Le jeu enregistre le meilleur temps réalisé et permet de recommencer une partie à tout moment.
+PURR BROS is a 2D platform game developed in C++ with Qt. The player controls a character who must navigate through various platforms to reach a final goal while collecting coins. The game records the best completion time and allows restarting at any time.
 
-## Fonctionnalités
-- Contrôle du personnage avec les touches du clavier (Z/Q/S/D ou flèches directionnelles)
-- Système de saut et gravité réaliste
-- Plateformes mobiles et statiques
-- Collecte de pièces
-- Chronomètre et enregistrement du meilleur temps
-- Menu avec options "About" et "Restart"
-- Vue centrée sur le joueur qui suit ses déplacements
+## Features
+- Character control with keyboard keys (Z/Q/S/D or arrow keys)
+- Realistic jump and gravity system
+- Mobile and static platforms
+- Coin collection
+- Timer and best time recording
+- Menu with "About" and "Restart" options
+- Player-centered view that follows movements
+
+## Objectives
+Collect as many coins as possible as quickly as possible, and reach the treasure chest to secure the coins.
+
+## Controls
+- Movement: ZQSD keys or arrows
+- Jump: Space bar
+- Play again: R key
 
 ## Installation
-### Prérequis
+### Prerequisites
 - Qt5 (Core, Gui, Widgets)
-- Compilateur C++ compatible C++11
-- CMake (version 3.25 ou supérieure)
+- C++ compiler compatible with C++11
+- CMake (version 3.25 or higher)
 
 ### Compilation
-1. Clonez le dépôt ou téléchargez les fichiers sources
-2. Créez un répertoire de build :
+1. Clone the repository or download the source files
+2. Create a build directory:
    ```bash
    mkdir build && cd build
 3. cmake ..
 4. cmake --build .
 
 
-##Structure du projet
+## Project Structure
 .
-├── CMakeLists.txt          # Fichier de configuration CMake
-├── main.cpp                # Point d'entrée de l'application
-├── MainWindow.h/cpp        # Gestion de la fenêtre principale
-├── MyScene.h/cpp           # Gestion de la scène de jeu
-└── assets/                 # Dossier contenant les ressources graphiques
-    ├── environment/        # Arrière-plans et plateformes
-    ├── player/             # Sprites du joueur
+├── CMakeLists.txt          # CMake configuration file
+├── main.cpp                # Application entry point
+├── MainWindow.h/cpp        # Main window management
+├── MyScene.h/cpp           # Game scene management
+└── assets/                 # Folder containing graphic resources
+    ├── environment/        # Backgrounds and platforms
+    ├── player/             # Player sprites
     └── ...
 
+## Note about Code
+The source code contains French comments and identifiers. If you have any questions about the implementation, feel free to contact me on Discord @colin503.
 
-##Licence
+## Author
+Colin503 - Main developer
 
-Ce README fournit toutes les informations essentielles sur votre projet, y compris comment le compiler, l'exécuter et les contrôles. Vous pouvez le modifier selon vos besoins, par exemple pour ajouter des captures d'écran ou des informations supplémentaires sur les mécanismes de jeu.
+##  License
+This project is an academic work and is not intended for commercial use.
+
+This README provides all essential information about the project, including how to compile, run, and control the game. You may modify it as needed, for example to add screenshots or additional information about game mechanics.
