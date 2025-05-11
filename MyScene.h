@@ -27,28 +27,27 @@ private:
     float jumpForce;
     bool onGround;
     bool isGameRunning;
+    int score_piece=0;
+    int platformDirection = 1;
+    const int PLATFORM_SPEED = 3;
+    const int PLATFORM_MIN_Y = 50;
+    const int PLATFORM_MAX_Y = 800;
+    QGraphicsPixmapItem* movingPlatform = nullptr; // Pointeur dédié
 
-    // Éléments de jeu
-    QGraphicsPixmapItem* playerItem;
-    QGraphicsPixmapItem* goalItem;
-    QVector<QGraphicsPixmapItem*> platforms;
-    QVector<QGraphicsPixmapItem*> coins;
+
 
     // Textures
     struct Textures {
         QPixmap player;
         QPixmap playerJump;
+        QPixmap playerFinal;
         QPixmap platformC;
         QPixmap background;
         QPixmap goal;
         QPixmap coin;
+        QPixmap floor;
     } textures;
 
-    // UI
-    QGraphicsTextItem* timeText;
-    QGraphicsTextItem* bestTimeText;
-    QTime gameTime;
-    QTime bestTime;
 
     void handleWinCondition();
     void togglePause();
@@ -64,7 +63,19 @@ public:
     void initTimers();
     void loadBestTime();
     QGraphicsPixmapItem* createPlatform(int x, int y, int width, int height);
+    QGraphicsPixmapItem* createFloor(int x, int y, int width, int height);
     QGraphicsPixmapItem* createCoin(int x, int y);
+
+    QGraphicsPixmapItem* playerItem;
+    QGraphicsPixmapItem* goalItem;
+    QVector<QGraphicsPixmapItem*> platforms;
+    QVector<QGraphicsPixmapItem*> coins;
+    QVector<QGraphicsPixmapItem*> floors;
+    QGraphicsTextItem* timeText;
+    QGraphicsTextItem* bestTimeText;
+    QTime gameTime;
+    QTime bestTime;
+    QGraphicsRectItem* timeBg = nullptr; // Ajoute cette ligne
 
 public slots:
     void resetGame();

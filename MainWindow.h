@@ -28,7 +28,9 @@ private :
     MyScene* mainScene;
     QGraphicsView* mainView;
     QMenu* helpMenu;
-
+    QTimer* followTimer;
+private slots:
+    void followPlayer();
 
 public:
     MainWindow(QWidget* parent = nullptr);
