@@ -53,6 +53,7 @@ private:
     void jump();
     void movePlayer(qreal x, qreal y);
     void SaveStats();
+    void SaveBestStats()
 
 public:
     MyScene(QObject* parent = nullptr);
