@@ -55,7 +55,17 @@ void MyScene::createGameItems() {
 
 
 
-    coins.append(createCoin(850,650));
+     coins.append(createCoin(875,700));
+    coins.append(createCoin(1000,700));
+
+    coins.append(createCoin(2375,600));
+    coins.append(createCoin(2500,600));
+
+    coins.append(createCoin(2875,750));
+    coins.append(createCoin(3000,750));
+
+    coins.append(createCoin(3900,1100));
+    coins.append(createCoin(3475,50));
 
 
     goalItem = new QGraphicsPixmapItem(textures.goal);
