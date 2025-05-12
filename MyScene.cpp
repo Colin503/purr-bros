@@ -30,15 +30,21 @@ void MyScene::createGameItems() {
     bgItem->setZValue(-1000);
     addItem(bgItem);
 
+
+    platforms.clear(); //on vide tous les vecteurs
+    floors.clear();
+    coins.clear();
+    delete timeText;
+    delete bestTimeText;
+    delete playerItem;
+
     // Joueur
     playerItem = new QGraphicsPixmapItem(textures.player); //initialisation du joueur
     playerItem->setPos(100, -1000);
     playerItem->setZValue(100);
     addItem(playerItem);
 
-    platforms.clear(); //on vide tous les vecteurs
-    floors.clear();
-    coins.clear();
+   
 
     floors.append(createFloor(0, 1200, 1500, 400));
     floors.append(createFloor(1600, 1200, 1500,400));
@@ -262,6 +268,7 @@ void MyScene::resetGame() {
     timeText->setPlainText("Temps: 00:00:00");
 
     //  jeu
+    createGameItems();
     isGameRunning = true;
     timer->start();
 }
