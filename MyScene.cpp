@@ -12,6 +12,7 @@ MyScene::MyScene(QObject* parent) : QGraphicsScene(parent),
 }
 
 void MyScene::loadTextures() {
+
     //chargement des textures (images) pour éviter de trop faire d'accès disque
     textures.player.load("../assets/player/player.png");
     textures.playerJump.load("../assets/player/player_jump.png");
@@ -25,18 +26,20 @@ void MyScene::loadTextures() {
 }
 
 void MyScene::createGameItems() {
-    // Background
-    QGraphicsPixmapItem* bgItem = new QGraphicsPixmapItem(textures.background); //init de l'arriere plan
-    bgItem->setZValue(-1000);
-    addItem(bgItem);
 
 
     platforms.clear(); //on vide tous les vecteurs
     floors.clear();
     coins.clear();
+    //for (QGraphicsPixmapItem* coins : coins) delete coins; supprimer les pièces non touchés lors du restart
     delete timeText;
     delete bestTimeText;
     delete playerItem;
+
+    // Background
+    QGraphicsPixmapItem* bgItem = new QGraphicsPixmapItem(textures.background); //init de l'arriere plan
+    bgItem->setZValue(-1000);
+    addItem(bgItem);
 
     // Joueur
     playerItem = new QGraphicsPixmapItem(textures.player); //initialisation du joueur
@@ -44,7 +47,7 @@ void MyScene::createGameItems() {
     playerItem->setZValue(100);
     addItem(playerItem);
 
-   
+
 
     floors.append(createFloor(0, 1200, 1500, 400));
     floors.append(createFloor(1600, 1200, 1500,400));
@@ -61,7 +64,7 @@ void MyScene::createGameItems() {
 
 
 
-     coins.append(createCoin(875,700));
+    coins.append(createCoin(875,700));
     coins.append(createCoin(1000,700));
 
     coins.append(createCoin(2375,600));
@@ -117,6 +120,7 @@ void MyScene::loadBestTime() {
 }
 
 void MyScene::update() {
+
     if (!isGameRunning) return;
 
     // Physique du joueur
@@ -191,6 +195,7 @@ void MyScene::update() {
 
     // Collision avec le coffre
     if (playerItem->collidesWithItem(goalItem)) {
+
         handleWinCondition();
         playerItem->setPixmap(textures.playerFinal);
         //ajouter un texte pour rejouer
@@ -268,7 +273,9 @@ void MyScene::resetGame() {
     timeText->setPlainText("Temps: 00:00:00");
 
     //  jeu
+    loadBestTime();
     createGameItems();
+    score_piece=0;
     isGameRunning = true;
     timer->start();
 }
@@ -285,14 +292,16 @@ MyScene::~MyScene() {
 void MyScene::handleWinCondition() {
     isGameRunning = false;
     timer->stop();
+    SaveStats(); //sauvegarde du score dans stats.txt
 
-    if (bestTime.isNull() || gameTime < bestTime) {
+    if (bestTime.isNull() || gameTime < bestTime) { //si record battu
         bestTime = gameTime;
         bestTimeText->setPlainText("Meilleur temps: " + bestTime.toString("hh:mm:ss"));
 
         QSettings settings;
         settings.setValue("bestTime", bestTime);
-        SaveStats();
+        //qDebug()<<"passe t-on par la ?";
+        SaveBestStats();
     }
 }
 
@@ -320,14 +329,28 @@ QGraphicsPixmapItem* MyScene::createCoin(int x, int y) {
 }
 
 void MyScene::SaveStats() {
-    QFile file("stats.txt");
+    //qDebug()<<"APPEL DE LA FONCTION";
+    QFile file("../stats.txt");
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        qDebug() << "Impossible d'ouvrir le fichier en écriture";
+        return;
+    }
+    QTextStream out(&file);
+    out << "Temps: " << gameTime.toString("hh:mm:ss") << "\n";
+    out << "Pieces: " << score_piece << "\n";
+    file.close();
+
+}
+void MyScene::SaveBestStats() {
+    QFile file("../beststats.txt");
+    //if (!file.exists()) this->settings.clear();
     if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
         qDebug() << "Impossible d'ouvrir le fichier en écriture";
         return;
     }
     QTextStream out(&file);
     out << "Meilleur temps: " << bestTime.toString("hh:mm:ss") << "\n";
-    out << "Pièces: " << score_piece << "\n";
+    out << "Pieces: " << score_piece << "\n";
     file.close();
 
 }
